@@ -1,5 +1,9 @@
 from setuptools import setup, find_packages
 
+def read_requirements():
+    with open('requirements.txt', 'r') as req_file:
+        return [line.strip() for line in req_file if line.strip() != '']
+
 setup(
     name="flojoy",
     packages=find_packages(exclude=["tests"]),
@@ -20,21 +24,7 @@ setup(
         "topic",
     ],
     python_requires=">=3.10",
-    install_requires=[
-        "python-box",
-        "requests",
-        "networkx",
-        "numpy",
-        "scipy",
-        "pandas",
-        "pytest",
-        "python-dotenv",
-        "pyyaml",
-        "plotly==5.8.2",
-        "huggingface-hub==0.16.4",
-        "Pillow",
-        "cloudpickle",
-    ],
+    install_requires=read_requirements(),
     classifiers=[
         "Development Status :: 3 - Alpha",
         "Intended Audience :: Developers",
