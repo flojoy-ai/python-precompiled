@@ -2,7 +2,6 @@
 from typing import Any
 from .dao import Dao
 
-
 class SmallMemory:
     """
     SmallMemory - available during jobset execution - intended to be used ONLY inside node functions

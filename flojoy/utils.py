@@ -4,8 +4,6 @@ from pathlib import Path
 from typing import Any, Callable
 
 import logging
-import yaml
-from dotenv import dotenv_values  # type:ignore
 from .dao import Dao
 from .config import FlojoyConfig, logger
 from .node_init import NodeInit, NodeInitService
@@ -22,10 +20,6 @@ if sys.platform == "win32":
     FLOJOY_CACHE_DIR = os.path.join(os.environ["APPDATA"], FLOJOY_DIR)
 else:
     FLOJOY_CACHE_DIR = os.path.join(os.environ["HOME"], FLOJOY_DIR)
-
-env_vars = dotenv_values("../.env")
-port = env_vars.get("VITE_BACKEND_PORT", "8000")
-BACKEND_URL = os.environ.get("BACKEND_URL", f"http://127.0.0.1:{port}")
 
 
 def set_offline():
@@ -73,21 +67,6 @@ def dump_str(result: Any, limit: int | None = None):
         if limit is None or len(result_str) <= limit
         else result_str[:limit] + "..."
     )
-
-
-def get_flojoy_root_dir() -> str:
-    home = str(Path.home())
-    path = os.path.join(home, ".flojoy/flojoy.yaml")
-    stream = open(path, "r")
-    yaml_dict = yaml.load(stream, Loader=yaml.FullLoader)
-    root_dir = ""
-
-    if isinstance(yaml_dict, str):
-        root_dir = yaml_dict.split(":")[1]
-    else:
-        root_dir = yaml_dict["PATH"]
-
-    return root_dir
 
 def get_node_init_function(node_func: Callable) -> NodeInit:
     return NodeInitService().get_node_init_function(node_func)
