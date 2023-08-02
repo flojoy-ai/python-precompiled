@@ -1,2 +1,2 @@
-box==6.0.0
+python-box==6.0.0
 numpy==1.23
