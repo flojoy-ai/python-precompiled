@@ -1,6 +1,6 @@
 import difflib
 import typing
-import numpy as np
+from ulab import numpy as np
 from box import Box, box_list
 from typing import Union, Literal, get_args, Any, cast
 

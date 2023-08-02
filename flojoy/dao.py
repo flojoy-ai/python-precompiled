@@ -1,4 +1,4 @@
-import numpy as np
+from ulab import numpy as np
 from typing import Any, Callable
 from threading import Lock
 from .data_container import DCNpArrayType
