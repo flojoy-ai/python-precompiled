@@ -28,10 +28,6 @@ class SmallMemory:
                 meta_data["dimensions"] = value.shape
                 self.dao.set_obj(value_type_key, meta_data)
                 self.dao.set_np_array(memory_key, value)
-            case "pandas.core.frame.DataFrame":
-                meta_data["type"] = "pd_dframe"
-                self.dao.set_obj(value_type_key, meta_data)
-                self.dao.set_pandas_dataframe(memory_key, value)
             case "str" | "numpy.float64":
                 meta_data["type"] = "string"
                 self.dao.set_obj(value_type_key, meta_data)
@@ -62,8 +58,6 @@ class SmallMemory:
                 return self.dao.get_obj(memory_key)
             case "np_array":
                 return self.dao.get_np_array(memory_key, meta_data)
-            case "pd_dframe":
-                return self.dao.get_pd_dataframe(memory_key)
             case _:
                 return None
 

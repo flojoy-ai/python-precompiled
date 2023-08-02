@@ -1,13 +1,10 @@
-import json
 import traceback
 from functools import wraps
 
 from flojoy.node_init import NodeInitService
 from .data_container import DataContainer
-from .utils import PlotlyJSONEncoder
 from typing import Callable, Any, Optional
-from .job_result_utils import get_frontend_res_obj_from_result, get_dc_from_result
-from .utils import send_to_socket
+from .job_result_utils import get_dc_from_result
 from .config import logger
 from .parameter_types import format_param_value
 from inspect import signature
@@ -146,16 +143,7 @@ def flojoy(
         ):
             try:
                 FN = func.__name__
-                sys_status = "🏃‍♀️ Running python job: " + FN
-                send_to_socket(
-                    json.dumps(
-                        {
-                            "SYSTEM_STATUS": sys_status,
-                            "jobsetId": jobset_id,
-                            "RUNNING_NODE": node_id,
-                        }
-                    )
-                )
+
                 logger.debug("previous jobs:", previous_jobs)
                 # Get command parameters set by the user through the control panel
                 func_params: dict[str, Any] = {}
@@ -213,48 +201,11 @@ def flojoy(
                     for value in dc_obj.values():
                         if isinstance(value, DataContainer):
                             value.validate()
-                # Response object to send to FE
-                result = get_frontend_res_obj_from_result(dc_obj)
                 JobService().post_job_result(
                     job_id, dc_obj
                 )  # post result to the job service before sending result to socket
-
-                send_to_socket(
-                    json.dumps(
-                        {
-                            "NODE_RESULTS": {
-                                "cmd": FN,
-                                "id": node_id,
-                                "result": result,
-                            },
-                            "jobsetId": jobset_id,
-                        },
-                        cls=PlotlyJSONEncoder,
-                    )
-                )
-
-                if func.__name__ == "END":
-                    send_to_socket(
-                        json.dumps(
-                            {
-                                "SYSTEM_STATUS": "🤙 python script run successful",
-                                "RUNNING_NODE": "",
-                                "jobsetId": jobset_id,
-                            }
-                        )
-                    )
                 return dc_obj
             except Exception as e:
-                send_to_socket(
-                    json.dumps(
-                        {
-                            "SYSTEM_STATUS": f"Failed to run: {func.__name__}",
-                            "FAILED_NODES": node_id,
-                            "FAILURE_REASON": e.args[0],
-                            "jobsetId": jobset_id,
-                        }
-                    )
-                )
                 logger.debug("error occured while running the node")
                 logger.debug(traceback.format_exc())
                 raise e

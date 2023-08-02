@@ -1,5 +1,4 @@
 import numpy as np
-import pandas as pd
 from typing import Any, Callable
 from threading import Lock
 from .data_container import DCNpArrayType
@@ -91,19 +90,9 @@ class Dao:
         with _dict_sm_lock:
             self.storage[memo_key] = value
 
-    def set_pandas_dataframe(self, key: str, dframe: pd.DataFrame):
-        with _dict_sm_lock:
-            self.storage[key] = dframe
-
     def set_str(self, key: str, value: str):
         with _dict_sm_lock:
             self.storage[key] = value
-
-    def get_pd_dataframe(self, key: str) -> pd.DataFrame | None:
-        with _dict_sm_lock:
-            encoded = self.storage.get(key, None)
-        self.check_if_valid(encoded, pd.DataFrame)
-        return encoded
 
     def get_np_array(self, memo_key: str) -> DCNpArrayType | None:
         with _dict_sm_lock:

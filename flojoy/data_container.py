@@ -1,9 +1,7 @@
 import difflib
 import typing
 import numpy as np
-import pandas as pd
 from box import Box, box_list
-import plotly.graph_objects as go  # type:ignore
 from typing import Union, Literal, get_args, Any, cast
 
 
@@ -16,25 +14,21 @@ def find_closest_match(given_str: str, available_str: list[str]):
 
 
 DCType = Literal[
-    "dataframe",
     "grayscale",
     "image",
     "matrix",
     "ordered_pair",
     "ordered_triple",
-    "plotly",
     "bytes",
     "text_blob",
     "scalar",
     "surface",
     "vector",
-    "parametric_dataframe",
     "parametric_grayscale",
     "parametric_image",
     "parametric_matrix",
     "parametric_ordered_pair",
     "parametric_ordered_triple",
-    "parametric_plotly",
     "parametric_scalar",
     "parametric_surface",
     "parametric_vector",
@@ -47,8 +41,6 @@ DCKwargsValue = Union[
     float,
     dict[str, Union[int, float, DCNpArrayType]],
     DCNpArrayType,
-    pd.DataFrame,
-    go.Figure,
     bytes,
     str,
     None,
@@ -111,7 +103,6 @@ class DataContainer(Box):
         "fig": ["t", "extra"],
     }
     type_keys_map: dict[DCType, list[str]] = {
-        "dataframe": ["m"],
         "matrix": ["m"],
         "vector": ["v"],
         "grayscale": ["m"],
@@ -120,7 +111,6 @@ class DataContainer(Box):
         "ordered_triple": ["x", "y", "z"],
         "surface": ["x", "y", "z"],
         "scalar": ["c"],
-        "plotly": ["fig"],
         "bytes": ["b"],
         "text_blob": ["text_blob"],
     }
@@ -128,8 +118,6 @@ class DataContainer(Box):
     SKIP_ARRAYIEFY_TYPES = [
         str,
         bytes,
-        go.Figure,
-        pd.DataFrame,
         np.ndarray,
     ]  # value types not to be arrayified
 
@@ -142,7 +130,7 @@ class DataContainer(Box):
 
     def _ndarrayify(
         self, value: DCKwargsValue
-    ) -> Union[DCNpArrayType, pd.DataFrame, dict[str, DCNpArrayType], go.Figure, None]:
+    ) -> Union[DCNpArrayType, dict[str, DCNpArrayType], None]:
         if isinstance(value, int) or isinstance(value, float):
             return np.array([value])
         elif isinstance(value, dict):
@@ -405,40 +393,6 @@ class ParametricMatrix(DataContainer):
         self, m: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
     ):
         super().__init__(type="parametric_matrix", m=m, t=t, extra=extra)
-
-
-class DataFrame(DataContainer):
-    m: pd.DataFrame
-
-    def __init__(self, df: pd.DataFrame, extra: ExtraType = None):  # type:ignore
-        super().__init__(type="dataframe", m=df, extra=extra)
-
-
-class ParametricDataFrame(DataContainer):
-    m: pd.DataFrame
-    t: DCNpArrayType
-
-    def __init__(  # type:ignore
-        self, df: pd.DataFrame, t: DCNpArrayType, extra: ExtraType = None
-    ):
-        super().__init__(type="parametric_dataframe", m=df, t=t, extra=extra)
-
-
-class Plotly(DataContainer):
-    fig: go.Figure
-
-    def __init__(self, fig: go.Figure, extra: ExtraType = None):  # type:ignore
-        super().__init__(type="plotly", fig=fig, extra=extra)
-
-
-class ParametricPlotly(DataContainer):
-    fig: go.Figure
-    t: DCNpArrayType
-
-    def __init__(  # type:ignore
-        self, fig: go.Figure, t: DCNpArrayType, extra: ExtraType = None
-    ):
-        super().__init__(type="parametric_plotly", fig=fig, t=t, extra=extra)
 
 
 class Image(DataContainer):
