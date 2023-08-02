@@ -4,7 +4,6 @@ from .data_container import *
 from .flojoy_python import *
 from .job_result_builder import *
 from .flojoy_instruction import *
-from .module_scraper import *
 from .job_result_utils import *
 from .utils import *
 from .parameter_types import *
