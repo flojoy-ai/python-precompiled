@@ -1,40 +1,45 @@
 class Box:
-    def __init__(self, dictionary=None):
-        if dictionary is None:
-            dictionary = {}
-        self._data = dictionary
+    def __init__(self, *args, **kwargs):
+        self.__dict__.update(*args, **kwargs)
+        for key, value in self.__dict__.items():
+            self.__dict__[key] = self._to_box(value)
 
-    def __getattr__(self, key):
-        if key in self._data:
-            value = self._data[key]
-            if isinstance(value, list):
-                return BoxList(value)
-            elif isinstance(value, dict):
-                return Box(value)
-            else:
-                return value
+    def _to_box(self, value):
+        if isinstance(value, dict):
+            return Box(value)
+        elif isinstance(value, list):
+            return [self._to_box(x) for x in value]
         else:
-            raise AttributeError(key)
+            return value
+
+    def __getattr__(self, item):
+        return self.__dict__.get(item, None)
 
     def __setattr__(self, key, value):
-        if key == '_data':
-            super().__setattr__(key, value)
-        else:
-            self._data[key] = value
+        self.__dict__[key] = self._to_box(value)
+
+    def __setitem__(self, key, value):
+        self.__dict__[key] = self._to_box(value)
+
+    def __getitem__(self, item, ignore_default=False):
+        return self.__dict__.get(item, None) if ignore_default else self.__dict__[item]
 
     def __repr__(self):
-        return repr(self._data)
+        return str(self.__dict__)
 
-class BoxList(list):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def to_dict(self):
+        result = {}
+        for key, value in self.__dict__.items():
+            if isinstance(value, Box):
+                result[key] = value.to_dict()
+            elif isinstance(value, list):
+                result[key] = [v.to_dict() if isinstance(v, Box) else v for v in value]
+            else:
+                result[key] = value
+        return result
 
-    def __getitem__(self, key):
-        item = super().__getitem__(key)
-        if isinstance(item, dict):
-            return Box(item)
-        elif isinstance(item, list):
-            return BoxList(item)
-        else:
-            return item
-
+    def get(self, key, default=None):
+        return self.__dict__.get(key, default)
+    
+    def values(self):
+        return self.__dict__.values()
