@@ -397,4 +397,3 @@ class ParametricGrayscale(DataContainer):
         self, img: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
     ):
         super().__init__(type="parametric_grayscale", m=img, t=t, extra=extra)
-``
