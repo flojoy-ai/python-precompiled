@@ -194,13 +194,13 @@ def flojoy(
                 # end calling the node function
                 ##########################
 
-                # some special nodes like LOOP return dict instead of `DataContainer`
-                if isinstance(dc_obj, DataContainer):
-                    dc_obj.validate()  # Validate returned DataContainer object
-                else:
-                    for value in dc_obj.values():
-                        if isinstance(value, DataContainer):
-                            value.validate()
+                # # some special nodes like LOOP return dict instead of `DataContainer`
+                # if isinstance(dc_obj, DataContainer):
+                #     dc_obj.validate()  # Validate returned DataContainer object
+                # else:
+                #     for value in dc_obj.values():
+                #         if isinstance(value, DataContainer):
+                #             value.validate()
                 JobService().post_job_result(
                     job_id, dc_obj
                 )  # post result to the job service before sending result to socket
