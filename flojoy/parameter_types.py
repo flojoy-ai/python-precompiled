@@ -4,8 +4,6 @@ from typing import Any, Union
 class NodeReference:
     """Node parameter type"""
 
-    ref: str
-
     def __init__(self, ref: str) -> None:
         self.ref = ref
 
@@ -16,9 +14,7 @@ class NodeReference:
 class Array:
     """Node parameter type of `list[str | float | int]`"""
 
-    ref: list[str | float | int]
-
-    def __init__(self, ref: list[str | float | int]) -> None:
+    def __init__(self, ref: list) -> None:
         self.ref = ref
 
     def unwrap(self):
@@ -26,34 +22,34 @@ class Array:
 
 
 def format_param_value(value: Any, value_type: str):
-    match value_type:
-        case "Array":
-            s = str(value)
-            parsed_value = parse_array(s, [str, float, int], "list[int | float | str]")
-            return Array(parsed_value)
-        case "float":
-            return float(value)
-        case "int":
-            return int(value)
-        case "bool":
-            return bool(value)
-        case "NodeReference":
-            return NodeReference(str(value))
-        case "list[str]":
-            return parse_array(str(value), [str], "list[str]")
-        case "list[float]":
-            return parse_array(str(value), [float], "list[float]")
-        case "list[int]":
-            return parse_array(str(value), [int], "list[int]")
-        case "select" | "str":
-            return str(value)
-        case _:
-            return value
+    if value_type == "Array":
+        s = str(value)
+        parsed_value = parse_array(s, [str, float, int], "list[int | float | str]")
+        return Array(parsed_value)
+    elif value_type == "float":
+        return float(value)
+    elif value_type == "int":
+        return int(value)
+    elif value_type == "bool":
+        return bool(value)
+    elif value_type == "NodeReference":
+        return NodeReference(str(value))
+    elif value_type == "list[str]":
+        return parse_array(str(value), [str], "list[str]")
+    elif value_type == "list[float]":
+        return parse_array(str(value), [float], "list[float]")
+    elif value_type == "list[int]":
+        return parse_array(str(value), [int], "list[int]")
+    elif value_type == "select" or value_type == "str":
+        return str(value)
+    else:
+        return value
+
 
 
 def parse_array(
-    str_value: str, type_list: list[Any], param_type: str
-) -> list[Union[int, float, str]]:
+    str_value: str, type_list: list, param_type: str
+) -> list:
     if not str_value:
         return []
 
@@ -64,8 +60,11 @@ def parse_array(
             return list(map(t, val_list))
         except ValueError:
             continue
+    
+    val1 = ','.join([str(t) for t in type_list])
+    val2 = ' | '.join([t.__name__ for t in type_list])
 
     raise ValueError(
-        f"Couldn't parse list items with type {','.join([str(t) for t in type_list])}."
-        + f"Value should be comma (',') separated {' | '.join([t.__name__ for t in type_list])} for parameter type {param_type}."
+        "Couldn't parse list items with type %s." % val1
+        + "Value should be comma (',') separated %s for parameter type %s." % (val2, param_type)
     )

@@ -5,19 +5,19 @@ from .flojoy_instruction import FLOJOY_INSTRUCTION
 
 
 class JobResultBuilder:
-    instructions: dict[str, Union[str, list[str]]] | None = None
+    instructions = None
 
     def __init__(self) -> None:
         self.data = self.get_default_data()
 
-    def _add_instructions(self, instruction: dict[str, Union[str, list[str]]]):
+    def _add_instructions(self, instruction):
         self.instructions = self.instructions if self.instructions is not None else {}
         self.instructions = {
             **self.instructions,
             **instruction,
         }
 
-    def from_inputs(self, inputs: list[DataContainer]):
+    def from_inputs(self, inputs: list):
         # if no inputs were provided, construct fake output
         if len(inputs) == 0:
             self.data = self.get_default_data()
@@ -30,18 +30,18 @@ class JobResultBuilder:
         self.data = data
         return self
 
-    def flow_to_nodes(self, nodes: list[str]):
+    def flow_to_nodes(self, nodes: list):
         if nodes.__len__() > 0:
             self._add_instructions({FLOJOY_INSTRUCTION.FLOW_TO_NODES: nodes})
         return self
 
-    def flow_to_directions(self, directions: list[str]):
+    def flow_to_directions(self, directions: list):
         if directions.__len__() > 0:
             self._add_instructions({FLOJOY_INSTRUCTION.FLOW_TO_DIRECTIONS: directions})
         return self
 
     def flow_by_flag(
-        self, flag: bool, true_direction: list[str], false_direction: list[str]
+        self, flag: bool, true_direction: list, false_direction: list
     ):
         self._add_instructions(
             {

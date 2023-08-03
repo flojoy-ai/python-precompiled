@@ -52,7 +52,7 @@ class Dao:
         with _dict_job_lock:
             res = self.job_results.get(job_id, None)
         if res is None:
-            raise ValueError(f"Job result with id {job_id} does not exist")
+            raise ValueError("Job result with id %s does not exist" % job_id)
         return res
 
     def post_job_result(self, job_id: str, result: Any):
@@ -83,10 +83,10 @@ class Dao:
         with _dict_sm_lock:
             if result is not None and not isinstance(result, expected_type):
                 raise ValueError(
-                    f"Expected {expected_type} type, but got {type(result)} instead!"
+                    "Expected %s type, but got %s instead!" % (expected_type, type(result))
                 )
 
-    def set_np_array(self, memo_key: str, value: DCNpArrayType):
+    def set_np_array(self, memo_key: str, value):
         with _dict_sm_lock:
             self.storage[memo_key] = value
 
@@ -94,24 +94,24 @@ class Dao:
         with _dict_sm_lock:
             self.storage[key] = value
 
-    def get_np_array(self, memo_key: str) -> DCNpArrayType | None:
+    def get_np_array(self, memo_key: str):
         with _dict_sm_lock:
             encoded = self.storage.get(memo_key, None)
         self.check_if_valid(encoded, np.ndarray)
         return encoded
 
-    def get_str(self, key: str) -> str | None:
+    def get_str(self, key: str):
         with _dict_sm_lock:
             encoded = self.storage.get(key, None)
         return encoded
 
-    def get_obj(self, key: str) -> dict[str, Any] | None:
+    def get_obj(self, key: str):
         with _dict_sm_lock:
             r_obj = self.storage.get(key, None)
         self.check_if_valid(r_obj, dict)
         return r_obj
 
-    def set_obj(self, key: str, value: dict[str, Any]):
+    def set_obj(self, key: str, value):
         with _dict_sm_lock:
             self.storage[key] = value
 
@@ -130,7 +130,7 @@ class Dao:
 
     def add_to_set(self, key: str, value: Any):
         with _dict_sm_lock:
-            res: set[Any] | None = self.storage.get(key, None)
+            res = self.storage.get(key, None)
         if res is None:
             res = set()
             res.add(value)
@@ -140,7 +140,7 @@ class Dao:
         with _dict_sm_lock:
             res.add(value)
 
-    def get_set_list(self, key: str) -> list[Any] | None:
+    def get_set_list(self, key: str):
         with _dict_sm_lock:
             res = self.storage.get(key, None)
         if res is None:

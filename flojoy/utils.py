@@ -60,7 +60,7 @@ class NotEncodable(Exception):
     pass
 
 
-def dump_str(result: Any, limit: int | None = None):
+def dump_str(result: Any, limit = None):
     result_str = str(result)
     return (
         result_str

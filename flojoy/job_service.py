@@ -10,7 +10,7 @@ class JobService:
     def __init__(self, maximum_runtime: float = 3000):
         self.dao = Dao.get_instance()
 
-    def get_job_result(self, job_id: str | None) -> dict[str, Any] | None:
+    def get_job_result(self, job_id):
         if job_id is None:
             return None
         return self.dao.get_job_result(job_id)

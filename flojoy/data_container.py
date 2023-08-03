@@ -1,11 +1,10 @@
 import difflib
-import typing
 from ulab import numpy as np
-from box import Box, box_list
-from typing import Union, Literal, get_args, Any, cast
+from box import Box
+from typing import Union, Any, cast
 
 
-def find_closest_match(given_str: str, available_str: list[str]):
+def find_closest_match(given_str: str, available_str: list):
     closest_match = difflib.get_close_matches(given_str, available_str, n=1)
     if closest_match:
         return closest_match[0]
@@ -13,39 +12,39 @@ def find_closest_match(given_str: str, available_str: list[str]):
         return None
 
 
-DCType = Literal[
-    "grayscale",
-    "image",
-    "matrix",
-    "ordered_pair",
-    "ordered_triple",
-    "bytes",
-    "text_blob",
-    "scalar",
-    "surface",
-    "vector",
-    "parametric_grayscale",
-    "parametric_image",
-    "parametric_matrix",
-    "parametric_ordered_pair",
-    "parametric_ordered_triple",
-    "parametric_scalar",
-    "parametric_surface",
-    "parametric_vector",
-]
+# DCType = Literal[
+#     "grayscale",
+#     "image",
+#     "matrix",
+#     "ordered_pair",
+#     "ordered_triple",
+#     "bytes",
+#     "text_blob",
+#     "scalar",
+#     "surface",
+#     "vector",
+#     "parametric_grayscale",
+#     "parametric_image",
+#     "parametric_matrix",
+#     "parametric_ordered_pair",
+#     "parametric_ordered_triple",
+#     "parametric_scalar",
+#     "parametric_surface",
+#     "parametric_vector",
+# ]
 
 DCNpArrayType = np.ndarray[Union[int, float], np.dtype[Any]]
 DCKwargsValue = Union[
-    list[Union[int, float]],
+    list,
     int,
     float,
-    dict[str, Union[int, float, DCNpArrayType]],
+    dict,
     DCNpArrayType,
     bytes,
     str,
     None,
 ]
-ExtraType = dict[str, Any] | None
+ExtraType = Union[dict, None]
 
 
 class DataContainer(Box):
@@ -68,7 +67,7 @@ class DataContainer(Box):
 
     """
 
-    allowed_types = list(typing.get_args(DCType))
+    # allowed_types = list(typing.get_args(DCType))
     allowed_keys = [
         "x",
         "y",
@@ -102,7 +101,7 @@ class DataContainer(Box):
         "extra": [*(k for k in allowed_keys if k not in ["extra"])],
         "fig": ["t", "extra"],
     }
-    type_keys_map: dict[DCType, list[str]] = {
+    type_keys_map = {
         "matrix": ["m"],
         "vector": ["v"],
         "grayscale": ["m"],
@@ -121,8 +120,6 @@ class DataContainer(Box):
         np.ndarray,
     ]  # value types not to be arrayified
 
-    type: DCType
-
     def copy(self):
         # Create an instance of DataContainer class
         copied_instance = DataContainer(**self)
@@ -130,31 +127,31 @@ class DataContainer(Box):
 
     def _ndarrayify(
         self, value: DCKwargsValue
-    ) -> Union[DCNpArrayType, dict[str, DCNpArrayType], None]:
+    ) -> Union[DCNpArrayType, dict]:
         if isinstance(value, int) or isinstance(value, float):
             return np.array([value])
         elif isinstance(value, dict):
-            arrayified_value: dict[str, DCNpArrayType] = {}
+            arrayified_value = {}
             for k, v in value.items():
                 arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
             return arrayified_value
-        elif isinstance(value, box_list.BoxList):
-            arrayified_value: dict[str, DCNpArrayType] = {}
-            for k, v in value.__dict__.items():
-                arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
-            return arrayified_value
+        # elif isinstance(value, box_list.BoxList):
+        #     arrayified_value = {}
+        #     for k, v in value.__dict__.items():
+        #         arrayified_value[k] = cast(DCNpArrayType, self._ndarrayify(v))
+        #     return arrayified_value
         elif isinstance(value, list):
             return np.array(value)
         elif value is None:
             return value
         else:
             raise ValueError(
-                f"DataContainer keys must be any of "
-                f"following types: {get_args(DCKwargsValue)}"
+                "DataContainer keys must be any of ",
+                DCKwargsValue
             )
 
     def __init__(  # type:ignore
-        self, type: DCType = "ordered_pair", **kwargs: DCKwargsValue
+        self, type = "ordered_pair", **kwargs: DCKwargsValue
     ):
         self.type = type
         for k, v in kwargs.items():
@@ -176,16 +173,16 @@ class DataContainer(Box):
         else:
             super().__setitem__(key, value)  # type: ignore
 
-    def __check_combination(self, key: str, keys: list[str], allowed_keys: list[str]):
+    def __check_combination(self, key: str, keys: list, allowed_keys: list):
         for i in keys:
             if i not in allowed_keys:
                 raise ValueError(
-                    f"You can't have '{key}' and '{i}' keys together for '{self.type}' type!"
+                    "You can't have '%s' and '%s' keys together for '%s' type!" % (key, i, self.type)
                 )
 
-    def __validate_key_for_type(self, data_type: DCType, key: str):
+    def __validate_key_for_type(self, data_type, key: str):
         if data_type.startswith("parametric_") and key != "t":
-            splitted_type = cast(DCType, data_type.split("parametric_")[1])
+            splitted_type = data_type.split("parametric_")[1]
             self.__validate_key_for_type(splitted_type, key)
         else:
             if (
@@ -198,25 +195,25 @@ class DataContainer(Box):
                     )
                 )
 
-    def __check_for_missing_keys(self, dc_type: DCType, keys: list[str]):
+    def __check_for_missing_keys(self, dc_type, keys: list):
         if dc_type.startswith("parametric_"):
             if "t" not in keys:
-                raise KeyError(f't key must be provided for "{dc_type}"')
+                raise KeyError('t key must be provided for "%s"' % dc_type)
             t = self["t"]
             is_ascending_order = all(t[i] <= t[i + 1] for i in range(len(t) - 1))
             if is_ascending_order is not True:
                 raise ValueError("t key must be in ascending order")
-            splitted_type = cast(DCType, dc_type.split("parametric_")[1])
+            splitted_type = dc_type.split("parametric_")[1]
             self.__check_for_missing_keys(splitted_type, keys)
         else:
             for k in self.type_keys_map[dc_type]:
                 if k not in keys:
-                    raise KeyError(f'"{k}" key must be provided for type "{dc_type}"')
+                    raise KeyError('"%s" key must be provided for type "%s"' % (k, dc_type))
 
-    def __build_error_text(self, key: str, data_type: str, available_keys: list[str]):
+    def __build_error_text(self, key: str, data_type: str, available_keys: list):
         return (
-            f'Invalid key "{key}" provided for data type "{data_type}", '
-            f'supported keys: {", ".join(available_keys)}'
+            'Invalid key "%s" provided for data type "%s", ' % (key, data_type) + 
+            'supported keys: {", ".join(available_keys)}'
         )
 
     def validate(self):
@@ -224,15 +221,15 @@ class DataContainer(Box):
         if dc_type not in self.allowed_types:
             closest_type = find_closest_match(dc_type, self.allowed_types)
             helper_text = (
-                f'Did you mean: "{closest_type}" ?'
+                'Did you mean: "%s" ?' % closest_type
                 if closest_type
-                else f'allowed types: "{", ".join(self.allowed_types)}"'
+                else 'allowed types: "%s"' % ({", ".join(self.allowed_types)})
             )
             raise ValueError(
-                f'unsupported type "{dc_type}" passed to '
-                f"DataContainer class, {helper_text}"
+                'unsupported type "%s" passed to ' % dc_type + 
+                "DataContainer class, %s" % helper_text
             )
-        dc_keys = list(cast(list[str], self.keys()))
+        dc_keys = list(self.keys())
         for k in dc_keys:
             if k != "type":
                 self.__check_combination(
@@ -245,8 +242,6 @@ class DataContainer(Box):
 
 
 class OrderedPair(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
 
     def __init__(  # type:ignore
         self, x: DCNpArrayType, y: DCNpArrayType, extra: ExtraType = None
@@ -255,9 +250,6 @@ class OrderedPair(DataContainer):
 
 
 class ParametricOrderedPair(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
-    t: DCNpArrayType
 
     def __init__(  # type:ignore
         self,
@@ -270,9 +262,6 @@ class ParametricOrderedPair(DataContainer):
 
 
 class OrderedTriple(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
-    z: DCNpArrayType
 
     def __init__(  # type:ignore
         self,
@@ -285,10 +274,6 @@ class OrderedTriple(DataContainer):
 
 
 class ParametricOrderedTriple(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
-    z: DCNpArrayType
-    t: DCNpArrayType
 
     def __init__(  # type:ignore
         self,
@@ -304,9 +289,6 @@ class ParametricOrderedTriple(DataContainer):
 
 
 class Surface(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
-    z: DCNpArrayType
 
     def __init__(  # type:ignore
         self,
@@ -324,10 +306,6 @@ class Surface(DataContainer):
 
 
 class ParametricSurface(DataContainer):
-    x: DCNpArrayType
-    y: DCNpArrayType
-    z: DCNpArrayType
-    t: DCNpArrayType
 
     def __init__(  # type:ignore
         self,
@@ -346,31 +324,26 @@ class ParametricSurface(DataContainer):
 
 
 class Scalar(DataContainer):
-    c: int | float
 
     def __init__(self, c: int | float, extra: ExtraType = None):  # type:ignore
         super().__init__(type="scalar", c=c, extra=extra)
 
 
 class ParametricScalar(DataContainer):
-    c: int | float
-    t: DCNpArrayType
 
     def __init__(  # type: ignore
-        self, c: int | float, t: DCNpArrayType, extra: ExtraType = None
+        self, c, t: DCNpArrayType, extra: ExtraType = None
     ):
         super().__init__(type="parametric_scalar", c=c, t=t, extra=extra)
 
 
 class Vector(DataContainer):
-    v: DCNpArrayType
 
     def __init__(self, v: DCNpArrayType, extra: ExtraType = None):  # type:ignore
         super().__init__(type="vector", v=v, extra=extra)
 
 
 class ParametricVector(DataContainer):
-    v: DCNpArrayType
 
     def __init__(  # type: ignore
         self, v: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
@@ -379,15 +352,12 @@ class ParametricVector(DataContainer):
 
 
 class Matrix(DataContainer):
-    m: DCNpArrayType
 
     def __init__(self, m: DCNpArrayType, extra: ExtraType = None):  # type:ignore
         super().__init__(type="matrix", m=m, extra=extra)
 
 
 class ParametricMatrix(DataContainer):
-    m: DCNpArrayType
-    t: DCNpArrayType
 
     def __init__(  # type: ignore
         self, m: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None
@@ -396,10 +366,6 @@ class ParametricMatrix(DataContainer):
 
 
 class Image(DataContainer):
-    r: DCNpArrayType
-    g: DCNpArrayType
-    b: DCNpArrayType
-    a: DCNpArrayType | None
 
     def __init__(  # type:ignore
         self,
@@ -413,7 +379,6 @@ class Image(DataContainer):
 
 
 class Bytes(DataContainer):
-    b: bytes
 
     def __init__(
         self,
@@ -423,19 +388,13 @@ class Bytes(DataContainer):
 
 
 class TextBlob(DataContainer):
-    text_blob: str
 
     def __init__(self, text_blob: str):
         super().__init__(type="text_blob", text_blob=text_blob)
 
 
 class ParametricImage(DataContainer):
-    t: DCNpArrayType
-    r: DCNpArrayType
-    g: DCNpArrayType
-    b: DCNpArrayType
-    a: DCNpArrayType | None
-
+    
     def __init__(  # type:ignore
         self,
         r: DCNpArrayType,
@@ -449,15 +408,12 @@ class ParametricImage(DataContainer):
 
 
 class Grayscale(DataContainer):
-    m: DCNpArrayType
 
     def __init__(self, img: DCNpArrayType, extra: ExtraType = None):  # type:ignore
         super().__init__(type="grayscale", m=img, extra=extra)
 
 
 class ParametricGrayscale(DataContainer):
-    m: DCNpArrayType
-    t: DCNpArrayType
 
     def __init__(  # type:ignore
         self, img: DCNpArrayType, t: DCNpArrayType, extra: ExtraType = None

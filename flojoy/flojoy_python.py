@@ -13,7 +13,7 @@ from .job_service import JobService
 __all__ = ["flojoy", "DefaultParams"]
 
 
-def fetch_inputs(previous_jobs: list[dict[str, str]]):
+def fetch_inputs(previous_jobs: list):
     """
     Queries for job results
 
@@ -27,7 +27,7 @@ def fetch_inputs(previous_jobs: list[dict[str, str]]):
     -------
     inputs : list of DataContainer objects
     """
-    dict_inputs: dict[str, DataContainer | list[DataContainer]] = dict()
+    dict_inputs = dict()
 
     try:
         for prev_job in previous_jobs:
@@ -48,7 +48,7 @@ def fetch_inputs(previous_jobs: list[dict[str, str]]):
             job_result = JobService().get_job_result(prev_job_id)
             if not job_result:
                 raise ValueError(
-                    f"Tried to get job result from {prev_job_id} but it was None"
+                    "Tried to get job result from %s but it was None" % prev_job_id
                 )
 
             result = (
@@ -57,7 +57,7 @@ def fetch_inputs(previous_jobs: list[dict[str, str]]):
                 else get_dc_from_result(job_result)
             )
             if result is not None:
-                logger.debug(f"got job result from {prev_job_id}")
+                logger.debug("got job result from %s" % prev_job_id)
                 if multiple:
                     if input_name not in dict_inputs:
                         dict_inputs[input_name] = [result]
@@ -83,10 +83,10 @@ class DefaultParams:
 
 
 def flojoy(
-    original_function: Callable[..., DataContainer | dict[str, Any]] | None = None,
+    original_function = None,
     *,
     node_type: Optional[str] = None,
-    deps: Optional[dict[str, str]] = None,
+    deps = None,
     inject_node_metadata: bool = False,
 ):
     """
@@ -132,21 +132,21 @@ def flojoy(
     ```
     """
 
-    def decorator(func: Callable[..., DataContainer | dict[str, Any]]):
+    def decorator(func):
         @wraps(func)
         def wrapper(
             node_id: str,
             job_id: str,
             jobset_id: str,
-            previous_jobs: list[dict[str, str]] = [],
-            ctrls: dict[str, Any] | None = None,
+            previous_jobs: list = [],
+            ctrls = None,
         ):
             try:
                 FN = func.__name__
 
                 logger.debug("previous jobs:", previous_jobs)
                 # Get command parameters set by the user through the control panel
-                func_params: dict[str, Any] = {}
+                func_params = {}
                 if ctrls is not None:
                     for _, input in ctrls.items():
                         param = input["param"]
@@ -163,8 +163,8 @@ def flojoy(
                 dict_inputs = fetch_inputs(previous_jobs)
 
                 # constructing the inputs
-                logger.debug(f"constructing inputs for {func.__name__}")
-                args: dict[str, Any] = {}
+                logger.debug("constructing inputs for %s" % func.__name__)
+                args = {}
                 sig = signature(func)
 
                 args = {**args, **dict_inputs}
