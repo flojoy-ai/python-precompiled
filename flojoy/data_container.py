@@ -156,21 +156,6 @@ class DataContainer(Box):
                     % (key, i, self.type)
                 )
 
-    def __validate_key_for_type(self, data_type, key: str):
-        if data_type.startswith("parametric_") and key != "t":
-            splitted_type = data_type.split("parametric_")[1]
-            self.__validate_key_for_type(splitted_type, key)
-        else:
-            if (
-                key not in self.type_keys_map[data_type] + ["extra"]
-                and data_type != "plotly"
-            ):
-                raise KeyError(
-                    self.__build_error_text(
-                        key, data_type, self.type_keys_map[data_type]
-                    )
-                )
-
     def __check_for_missing_keys(self, dc_type, keys: list):
         if dc_type.startswith("parametric_"):
             if "t" not in keys:
@@ -248,11 +233,6 @@ class Surface(DataContainer):
     ):
         super().__init__(type="surface", x=x, y=y, z=z, extra=extra)
 
-    def validate(self):
-        if self.z.ndim < 2:
-            raise ValueError("z key must be of 2D array for Surface type!")
-        super().validate()
-
 
 class ParametricSurface(DataContainer):
     def __init__(  # type:ignore
@@ -264,11 +244,6 @@ class ParametricSurface(DataContainer):
         extra = None,
     ):
         super().__init__(type="parametric_surface", x=x, y=y, z=z, t=t, extra=extra)
-
-    def validate(self):
-        if self.z.ndim < 2:
-            raise ValueError("z key must be of 2D array for Surface type!")
-        super().validate()
 
 
 class Scalar(DataContainer):
