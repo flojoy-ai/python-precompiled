@@ -91,14 +91,14 @@ class DataContainer(Box):
         "c": ["t", "extra"],
         "v": ["t", "extra"],
         "m": ["t", "extra"],
-        "t": [*(value for value in allowed_keys if value not in ["t"])],
+        "t": [value for value in allowed_keys if value not in ["t"]],
         "r": ["g", "b", "t", "a", "extra"],
         "g": ["r", "b", "t", "a", "extra"],
         "b": ["r", "g", "t", "a", "extra"],
         "a": ["r", "g", "b", "t", "extra"],
         "bytes": ["extra"],
         "text_blob": ["extra"],
-        "extra": [*(k for k in allowed_keys if k not in ["extra"])],
+        "extra": [k for k in allowed_keys if k not in ["extra"]],
         "fig": ["t", "extra"],
     }
     type_keys_map = {
@@ -122,7 +122,10 @@ class DataContainer(Box):
 
     def copy(self):
         # Create an instance of DataContainer class
-        copied_instance = DataContainer(**self)
+        copied_instance = DataContainer()
+        instance_dict = self.__dict__
+        for k, v in instance_dict.items():
+            setattr(copied_instance, k, v)
         return copied_instance
 
     def _ndarrayify(self, value: DCKwargsValue) -> Union[DCNpArrayType, dict]:
