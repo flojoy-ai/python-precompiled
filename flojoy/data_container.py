@@ -1,16 +1,6 @@
-import difflib
 from ulab import numpy as np
 from .box import Box
 from typing import Union, Any, cast
-
-
-def find_closest_match(given_str: str, available_str: list):
-    closest_match = difflib.get_close_matches(given_str, available_str, n=1)
-    if closest_match:
-        return closest_match[0]
-    else:
-        return None
-
 
 # DCType = Literal[
 #     "grayscale",
@@ -216,30 +206,6 @@ class DataContainer(Box):
             'Invalid key "%s" provided for data type "%s", ' % (key, data_type)
             + 'supported keys: {", ".join(available_keys)}'
         )
-
-    def validate(self):
-        dc_type = self.type
-        if dc_type not in self.allowed_types:
-            closest_type = find_closest_match(dc_type, self.allowed_types)
-            helper_text = (
-                'Did you mean: "%s" ?' % closest_type
-                if closest_type
-                else 'allowed types: "%s"' % ({", ".join(self.allowed_types)})
-            )
-            raise ValueError(
-                'unsupported type "%s" passed to ' % dc_type
-                + "DataContainer class, %s" % helper_text
-            )
-        dc_keys = list(self.keys())
-        for k in dc_keys:
-            if k != "type":
-                self.__check_combination(
-                    k,
-                    list(key for key in dc_keys if key not in ["type", k]),
-                    self.combinations[k],
-                )
-                self.__validate_key_for_type(dc_type, k)
-        self.__check_for_missing_keys(dc_type, dc_keys)
 
 
 class OrderedPair(DataContainer):
