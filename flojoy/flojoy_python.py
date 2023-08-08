@@ -199,12 +199,6 @@ def flojoy(
             )  # post result to the job service before sending result to socket
             return dc_obj
 
-        # Copying the attributes over
-        wrapper.__name__ = func.__name__
-        wrapper.__module__ = func.__module__
-        wrapper.__annotations__ = func.__annotations__
-        wrapper.__doc__ = func.__doc__
-
         return wrapper
 
     if original_function:
