@@ -1,4 +1,3 @@
-from functools import wraps
 from flojoy.node_init import NodeInitService
 from typing import Callable, Any, Optional
 from .job_result_utils import get_dc_from_result
@@ -130,7 +129,6 @@ def flojoy(
     """
 
     def decorator(func):
-        @wraps(func)
         def wrapper(
             node_id: str,
             job_id: str,
@@ -202,9 +200,16 @@ def flojoy(
             )  # post result to the job service before sending result to socket
             return dc_obj
 
+        # Copying the attributes over
+        wrapper.__name__ = func.__name__
+        wrapper.__module__ = func.__module__
+        wrapper.__annotations__ = func.__annotations__
+        wrapper.__doc__ = func.__doc__
+
         return wrapper
 
     if original_function:
         return decorator(original_function)
 
     return decorator
+
