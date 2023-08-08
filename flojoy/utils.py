@@ -1,24 +1,12 @@
-import os
-import sys
 from typing import Any, Callable
-
 from .dao import Dao
-from .config import FlojoyConfig, logger
+from .config import FlojoyConfig
 from .node_init import NodeInit, NodeInitService
 
 
 __all__ = [
     "clear_flojoy_memory",
 ]
-
-FLOJOY_DIR = ".flojoy"
-
-
-if sys.platform == "win32":
-    FLOJOY_CACHE_DIR = os.path.join(os.environ["APPDATA"], FLOJOY_DIR)
-else:
-    FLOJOY_CACHE_DIR = os.path.join(os.environ["HOME"], FLOJOY_DIR)
-
 
 def set_offline():
     """
