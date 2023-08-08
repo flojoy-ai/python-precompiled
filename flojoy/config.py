@@ -1,8 +1,3 @@
-import logging
-
-LOGGER_NAME = "flojoy"
-
-
 class FlojoyConfig:
     _instance = None
 
@@ -14,6 +9,9 @@ class FlojoyConfig:
 
     def __init__(self):
         self.is_offline = False
+        self.to_print = False
 
-
-logger = logging.getLogger(LOGGER_NAME)
+# TODO make log levels? 
+def logger(*to_print):
+    if FlojoyConfig.get_instance().to_print:
+        print(*to_print)

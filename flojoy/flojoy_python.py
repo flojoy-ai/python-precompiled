@@ -32,7 +32,7 @@ def fetch_inputs(previous_jobs: list):
             multiple = prev_job.get("multiple", False)
             edge = prev_job.get("edge", "")
 
-            logger.debug(
+            logger(
                 "fetching input from prev job id:",
                 prev_job_id,
                 " for input:",
@@ -53,7 +53,7 @@ def fetch_inputs(previous_jobs: list):
                 else get_dc_from_result(job_result)
             )
             if result is not None:
-                logger.debug("got job result from %s" % prev_job_id)
+                logger("got job result from %s" % prev_job_id)
                 if multiple:
                     if input_name not in dict_inputs:
                         dict_inputs[input_name] = [result]
@@ -63,7 +63,7 @@ def fetch_inputs(previous_jobs: list):
                     dict_inputs[input_name] = result
 
     except Exception as e:
-        logger.debug("error occured while fetching inputs", e)
+        logger("error occured while fetching inputs", e)
 
     return dict_inputs
 
@@ -110,7 +110,7 @@ def flojoy(
     @flojoy
     def SINE(dc_inputs:list[DataContainer], params:dict[str, Any]):
 
-        logger.debug('params passed to SINE', params)
+        logger('params passed to SINE', params)
 
         dc_input = dc_inputs[0]
 
@@ -124,7 +124,7 @@ def flojoy(
     ## equivalent to: decorated_sine = flojoy(SINE)
     ```
     pj_ids = [123, 456]
-    logger.debug(SINE(previous_job_ids = pj_ids, mock = True))
+    logger(SINE(previous_job_ids = pj_ids, mock = True))
     ```
     """
 
@@ -138,7 +138,7 @@ def flojoy(
         ):
             FN = func.__name__
 
-            logger.debug("previous jobs:", previous_jobs)
+            logger("previous jobs:", previous_jobs)
             # Get command parameters set by the user through the control panel
             func_params = {}
             if ctrls is not None:
@@ -148,7 +148,7 @@ def flojoy(
                     func_params[param] = format_param_value(value, input["type"])
             func_params["type"] = "default"
 
-            logger.debug(
+            logger(
                 "executing node_id:",
                 node_id,
                 "previous_jobs:",
@@ -157,7 +157,7 @@ def flojoy(
             dict_inputs = fetch_inputs(previous_jobs)
 
             # constructing the inputs
-            logger.debug("constructing inputs for %s" % func.__name__)
+            logger("constructing inputs for %s" % func.__name__)
             args = {}
             sig = signature(func)
 
@@ -174,7 +174,7 @@ def flojoy(
                     node_type="default",
                 )
 
-            logger.debug(node_id, " params: ", args.keys())
+            logger(node_id, " params: ", args.keys())
 
             # check if node has an init container and if so, inject it
             if NodeInitService().has_init_store(node_id):

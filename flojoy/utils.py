@@ -3,7 +3,6 @@ import sys
 from pathlib import Path
 from typing import Any, Callable
 
-import logging
 from .dao import Dao
 from .config import FlojoyConfig, logger
 from .node_init import NodeInit, NodeInitService
@@ -41,15 +40,13 @@ def set_debug_on():
     """
     Sets the print_on flag to True, which means that the print statements will be executed.
     """
-    logger.setLevel(logging.DEBUG)
-
+    FlojoyConfig.get_instance().to_print = True
 
 def set_debug_off():
     """
     Sets the print_on flag to False, which means that the print statements will not be executed.
     """
-    logger.setLevel(logging.INFO)
-
+    FlojoyConfig.get_instance().to_print = False
 
 def clear_flojoy_memory():
     Dao.get_instance().clear_job_results()
