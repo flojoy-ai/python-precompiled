@@ -1,8 +1,5 @@
-import traceback
 from functools import wraps
-
 from flojoy.node_init import NodeInitService
-from .data_container import DataContainer
 from typing import Callable, Any, Optional
 from .job_result_utils import get_dc_from_result
 from .config import logger
@@ -66,8 +63,8 @@ def fetch_inputs(previous_jobs: list):
                 else:
                     dict_inputs[input_name] = result
 
-    except Exception:
-        logger.debug(traceback.format_exc())
+    except Exception as e:
+        logger.debug("error occured while fetching inputs", e)
 
     return dict_inputs
 
@@ -141,74 +138,69 @@ def flojoy(
             previous_jobs: list = [],
             ctrls = None,
         ):
-            try:
-                FN = func.__name__
+            FN = func.__name__
 
-                logger.debug("previous jobs:", previous_jobs)
-                # Get command parameters set by the user through the control panel
-                func_params = {}
-                if ctrls is not None:
-                    for _, input in ctrls.items():
-                        param = input["param"]
-                        value = input["value"]
-                        func_params[param] = format_param_value(value, input["type"])
-                func_params["type"] = "default"
+            logger.debug("previous jobs:", previous_jobs)
+            # Get command parameters set by the user through the control panel
+            func_params = {}
+            if ctrls is not None:
+                for _, input in ctrls.items():
+                    param = input["param"]
+                    value = input["value"]
+                    func_params[param] = format_param_value(value, input["type"])
+            func_params["type"] = "default"
 
-                logger.debug(
-                    "executing node_id:",
-                    node_id,
-                    "previous_jobs:",
-                    previous_jobs,
+            logger.debug(
+                "executing node_id:",
+                node_id,
+                "previous_jobs:",
+                previous_jobs,
+            )
+            dict_inputs = fetch_inputs(previous_jobs)
+
+            # constructing the inputs
+            logger.debug("constructing inputs for %s" % func.__name__)
+            args = {}
+            sig = signature(func)
+
+            args = dict_inputs
+
+            for param, value in func_params.items():
+                if param in sig.parameters:
+                    args[param] = value
+            if inject_node_metadata:
+                args["default_params"] = DefaultParams(
+                    job_id=job_id,
+                    node_id=node_id,
+                    jobset_id=jobset_id,
+                    node_type="default",
                 )
-                dict_inputs = fetch_inputs(previous_jobs)
 
-                # constructing the inputs
-                logger.debug("constructing inputs for %s" % func.__name__)
-                args = {}
-                sig = signature(func)
+            logger.debug(node_id, " params: ", args.keys())
 
-                args = dict_inputs
+            # check if node has an init container and if so, inject it
+            if NodeInitService().has_init_store(node_id):
+                args["init_container"] = NodeInitService().get_init_store(node_id)
 
-                for param, value in func_params.items():
-                    if param in sig.parameters:
-                        args[param] = value
-                if inject_node_metadata:
-                    args["default_params"] = DefaultParams(
-                        job_id=job_id,
-                        node_id=node_id,
-                        jobset_id=jobset_id,
-                        node_type="default",
-                    )
+            ##########################
+            # calling the node function
+            ##########################
+            dc_obj = func(**args)  # DataContainer object from node
+            ##########################
+            # end calling the node function
+            ##########################
 
-                logger.debug(node_id, " params: ", args.keys())
-
-                # check if node has an init container and if so, inject it
-                if NodeInitService().has_init_store(node_id):
-                    args["init_container"] = NodeInitService().get_init_store(node_id)
-
-                ##########################
-                # calling the node function
-                ##########################
-                dc_obj = func(**args)  # DataContainer object from node
-                ##########################
-                # end calling the node function
-                ##########################
-
-                # # some special nodes like LOOP return dict instead of `DataContainer`
-                # if isinstance(dc_obj, DataContainer):
-                #     dc_obj.validate()  # Validate returned DataContainer object
-                # else:
-                #     for value in dc_obj.values():
-                #         if isinstance(value, DataContainer):
-                #             value.validate()
-                JobService().post_job_result(
-                    job_id, dc_obj
-                )  # post result to the job service before sending result to socket
-                return dc_obj
-            except Exception as e:
-                logger.debug("error occured while running the node")
-                logger.debug(traceback.format_exc())
-                raise e
+            # # some special nodes like LOOP return dict instead of `DataContainer`
+            # if isinstance(dc_obj, DataContainer):
+            #     dc_obj.validate()  # Validate returned DataContainer object
+            # else:
+            #     for value in dc_obj.values():
+            #         if isinstance(value, DataContainer):
+            #             value.validate()
+            JobService().post_job_result(
+                job_id, dc_obj
+            )  # post result to the job service before sending result to socket
+            return dc_obj
 
         return wrapper
 
