@@ -167,7 +167,7 @@ def flojoy(
                 args = {}
                 sig = signature(func)
 
-                args = {**args, **dict_inputs}
+                args = dict_inputs
 
                 for param, value in func_params.items():
                     if param in sig.parameters:
