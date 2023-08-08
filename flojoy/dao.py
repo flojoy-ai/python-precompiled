@@ -1,4 +1,4 @@
-from ulab import numpy as np
+import numpy as np
 from typing import Any, Callable
 
 MAX_LIST_SIZE = 1000

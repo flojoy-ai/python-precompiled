@@ -6,7 +6,7 @@ For example, the ADD node should make a best effort to do something reasonable w
 For this reason, we've created the `Reconciler` class to handle the process of turning different data types into compatible, easily added objects. 
 """
 from typing import Tuple
-from ulab import numpy
+import numpy
 
 from .data_container import DataContainer
 

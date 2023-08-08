@@ -1,4 +1,4 @@
-from ulab import numpy
+import numpy
 import pandas
 import unittest
 
