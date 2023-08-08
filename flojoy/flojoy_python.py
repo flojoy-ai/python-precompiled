@@ -3,7 +3,6 @@ from typing import Callable, Any, Optional
 from .job_result_utils import get_dc_from_result
 from .config import logger
 from .parameter_types import format_param_value
-from inspect import signature
 from .job_service import JobService
 
 __all__ = ["flojoy", "DefaultParams"]
@@ -134,6 +133,7 @@ def flojoy(
             job_id: str,
             jobset_id: str,
             previous_jobs: list = [],
+            function_parameters: set = set(),
             ctrls = None,
         ):
             FN = func.__name__
@@ -159,12 +159,11 @@ def flojoy(
             # constructing the inputs
             logger("constructing inputs for %s" % func.__name__)
             args = {}
-            sig = signature(func)
 
             args = dict_inputs
 
             for param, value in func_params.items():
-                if param in sig.parameters:
+                if param in function_parameters:
                     args[param] = value
             if inject_node_metadata:
                 args["default_params"] = DefaultParams(
