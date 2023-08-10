@@ -49,5 +49,6 @@ class JobResultBuilder():
 
     def get_default_data(self) -> DataContainer:
         x = np.arange(0, 1000, 1)
-        y = np.ones_like(x)
+        y = x.copy()
+        y[:] = 1
         return DataContainer(x=x, y=y)
