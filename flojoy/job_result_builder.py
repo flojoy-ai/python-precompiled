@@ -42,9 +42,9 @@ class JobResultBuilder():
     def build(self):
         result = self.data
         if self.instructions:
-            result.update(self.instructions)
+            result = self.instructions
             result[FLOJOY_INSTRUCTION.RESULT_FIELD] = 'data'
-            result['data'] = result
+            result['data'] = self.data
         return result
 
     def get_default_data(self) -> DataContainer:
