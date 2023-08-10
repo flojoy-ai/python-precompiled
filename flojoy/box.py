@@ -18,9 +18,6 @@ class Box:
         else:
             return value
 
-    def __getattr__(self, item):
-        getattr(self, item)
-
     def __setitem__(self, key, value):
         setattr(self, key, value)
 
