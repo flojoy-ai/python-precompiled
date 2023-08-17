@@ -1,7 +1,6 @@
 
 from .data_container import DataContainer
 import numpy as np
-from typing import Union
 from .flojoy_instruction import FLOJOY_INSTRUCTION
 
 class JobResultBuilder():

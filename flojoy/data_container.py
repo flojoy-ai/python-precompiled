@@ -23,6 +23,7 @@ from typing import Union, Any, cast
 #     "parametric_vector",
 # ]
 
+class DCNpArrayType: 0
 
 class DataContainer(Box):
     """
