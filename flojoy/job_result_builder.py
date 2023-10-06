@@ -25,12 +25,12 @@ class JobResultBuilder():
         return self
 
     def flow_to_nodes(self, nodes: list):
-        if (nodes.__len__() > 0):
+        if len(nodes) > 0:
             self._add_instructions({FLOJOY_INSTRUCTION.FLOW_TO_NODES: nodes})
         return self
 
     def flow_to_directions(self, directions: list):
-        if (directions.__len__() > 0):
+        if len(directions) > 0:
             self._add_instructions({FLOJOY_INSTRUCTION.FLOW_TO_DIRECTIONS: directions})
         return self
 
